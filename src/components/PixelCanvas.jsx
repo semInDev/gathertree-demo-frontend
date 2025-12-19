@@ -10,16 +10,17 @@ import { useEffect, useMemo, useRef, useState } from "react";
 export default function PixelCanvas({
   widthPx,
   heightPx,
-  scale = 10,
+  // scale = 10,
   initialImageDataUrl,
   onChange,
 }) {
   const canvasRef = useRef(null);
 
-  const [color, setColor] = useState("#d62c2c");
+  const [color, setColor] = useState("#2f7141ff");
   const [tool, setTool] = useState("pen"); // pen | eraser
-  const [brushSize, setBrushSize] = useState(1); // ✅ 펜 굵기
+  const [brushSize, setBrushSize] = useState(2); // ✅ 펜 굵기
   const [isDown, setIsDown] = useState(false);
+  const [scale, setScale] = useState(10); //확대, 축소를 위함
 
   const cssWidth = widthPx * scale;
   const cssHeight = heightPx * scale;
@@ -80,6 +81,32 @@ export default function PixelCanvas({
     };
   };
 
+  // 여기 추가한 부분 !!
+  const lastPosRef = useRef(null);
+
+  // 선 안끊겨보이게 하려고
+  const drawLine = (from, to) => {
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  const steps = Math.max(Math.abs(dx), Math.abs(dy));
+
+  for (let i = 0; i <= steps; i++) {
+    const x = Math.round(from.x + (dx * i) / steps);
+    const y = Math.round(from.y + (dy * i) / steps);
+    drawBrush(x, y);
+  }
+};
+
+// 확대, 축소 함수
+const zoomIn = () => {
+  setScale((s) => Math.min(s + 2, 40));
+};
+
+const zoomOut = () => {
+  setScale((s) => Math.max(s - 2, 4));
+};
+
+
   /* -----------------------------
    * 브러시 드로잉 (굵기 지원)
    * ----------------------------- */
@@ -114,16 +141,16 @@ export default function PixelCanvas({
    * ----------------------------- */
   const handleDown = (e) => {
     setIsDown(true);
-    const { x, y } = getPixelFromEvent(e);
-    drawBrush(x, y);
-    emit();
+    const pos = getPixelFromEvent(e);
+    lastPosRef.current = pos;
+    drawBrush(pos.x, pos.y);
   };
 
   const handleMove = (e) => {
-    if (!isDown) return;
-    const { x, y } = getPixelFromEvent(e);
-    drawBrush(x, y);
-    emit();
+    if (!isDown || !lastPosRef.current) return;
+    const pos = getPixelFromEvent(e);
+    drawLine(lastPosRef.current, pos);
+    lastPosRef.current = pos;
   };
 
   const handleUp = () => setIsDown(false);
@@ -221,6 +248,10 @@ export default function PixelCanvas({
           onMouseUp={handleUp}
           onMouseLeave={handleUp}
         />
+      </div>
+      <div>
+        <button onClick={zoomOut}>−</button>
+        <button onClick={zoomIn}>+</button>
       </div>
 
       <div className="mini" style={{ marginTop: 10 }}>
