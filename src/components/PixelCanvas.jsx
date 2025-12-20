@@ -10,7 +10,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 export default function PixelCanvas({
   widthPx,
   heightPx,
-  // scale = 10,
   initialImageDataUrl,
   onChange,
 }) {
@@ -18,17 +17,12 @@ export default function PixelCanvas({
 
   const [color, setColor] = useState("#2f7141ff");
   const [tool, setTool] = useState("pen"); // pen | eraser
-  const [brushSize, setBrushSize] = useState(2); // ✅ 펜 굵기
+  const [brushSize, setBrushSize] = useState(2); //  펜 굵기
   const [isDown, setIsDown] = useState(false);
   const [scale, setScale] = useState(10); //확대, 축소를 위함
 
   const cssWidth = widthPx * scale;
   const cssHeight = heightPx * scale;
-
-  const ctx = useMemo(() => {
-    const c = canvasRef.current;
-    return c ? c.getContext("2d", { willReadFrequently: true }) : null;
-  }, [canvasRef.current]);
 
   /* -----------------------------
    * 캔버스 초기화 & 이미지 로드
@@ -69,43 +63,46 @@ export default function PixelCanvas({
   };
 
   /* -----------------------------
-   * 마우스 → 픽셀 좌표 변환
+   * 마우스 → 픽셀 좌표 변환, 모바일, 태블릿펜 모두 가능하게
    * ----------------------------- */
   const getPixelFromEvent = (e) => {
     const rect = canvasRef.current.getBoundingClientRect();
-    const x = Math.floor(((e.clientX - rect.left) / rect.width) * widthPx);
-    const y = Math.floor(((e.clientY - rect.top) / rect.height) * heightPx);
+
+    const clientX = e.clientX ?? e.touches?.[0]?.clientX;
+    const clientY = e.clientY ?? e.touches?.[0]?.clientY;
+
+    const x = Math.floor(((clientX - rect.left) / rect.width) * widthPx);
+    const y = Math.floor(((clientY - rect.top) / rect.height) * heightPx);
+
     return {
       x: Math.max(0, Math.min(widthPx - 1, x)),
       y: Math.max(0, Math.min(heightPx - 1, y)),
     };
   };
 
-  // 여기 추가한 부분 !!
+  // 선 안끊겨보이게 하려고
   const lastPosRef = useRef(null);
 
-  // 선 안끊겨보이게 하려고
   const drawLine = (from, to) => {
-  const dx = to.x - from.x;
-  const dy = to.y - from.y;
-  const steps = Math.max(Math.abs(dx), Math.abs(dy));
+    const dx = to.x - from.x;
+    const dy = to.y - from.y;
+    const steps = Math.max(Math.abs(dx), Math.abs(dy));
 
-  for (let i = 0; i <= steps; i++) {
-    const x = Math.round(from.x + (dx * i) / steps);
-    const y = Math.round(from.y + (dy * i) / steps);
-    drawBrush(x, y);
-  }
-};
+    for (let i = 0; i <= steps; i++) {
+      const x = Math.round(from.x + (dx * i) / steps);
+      const y = Math.round(from.y + (dy * i) / steps);
+      drawBrush(x, y);
+    }
+  };
 
-// 확대, 축소 함수
-const zoomIn = () => {
-  setScale((s) => Math.min(s + 2, 40));
-};
+  // 확대, 축소 함수
+  // const zoomIn = () => {
+  //   setScale((s) => Math.min(s + 2, 40));
+  // };
 
-const zoomOut = () => {
-  setScale((s) => Math.max(s - 2, 4));
-};
-
+  // const zoomOut = () => {
+  //   setScale((s) => Math.max(s - 2, 4));
+  // };
 
   /* -----------------------------
    * 브러시 드로잉 (굵기 지원)
@@ -153,7 +150,10 @@ const zoomOut = () => {
     lastPosRef.current = pos;
   };
 
-  const handleUp = () => setIsDown(false);
+  const handleUp = () => {
+    setIsDown(false);
+    emit();
+  };
 
   /* -----------------------------
    * 전체 지우기
@@ -168,7 +168,7 @@ const zoomOut = () => {
 
   return (
     <div>
-      {/* 🔧 툴바 */}
+      {/*  툴바 */}
       <div className="btn-row" style={{ alignItems: "center" }}>
         <button
           className={`nes-btn ${tool === "pen" ? "is-primary" : ""}`}
@@ -186,7 +186,7 @@ const zoomOut = () => {
           지우개
         </button>
 
-        {/* ✅ 펜 굵기 */}
+        {/*  펜 굵기 */}
         <label
           className="mini"
           style={{ display: "flex", alignItems: "center", gap: 8 }}
@@ -224,7 +224,7 @@ const zoomOut = () => {
         </button>
       </div>
 
-      {/* 🎨 캔버스 */}
+      {/*  캔버스 */}
       <div
         className="nes-container is-rounded"
         style={{
@@ -232,6 +232,9 @@ const zoomOut = () => {
           padding: 12,
           marginTop: 12,
           display: "inline-block",
+
+          maxWidth: "100%", // 부모보다 커지지 않게
+          height: "auto",
         }}
       >
         <canvas
@@ -239,20 +242,28 @@ const zoomOut = () => {
           style={{
             width: cssWidth,
             height: cssHeight,
+
+            maxWidth: "100%", // 부모보다 커지지 않게
+            height: "auto",
+
             border: "2px solid #111",
             imageRendering: "pixelated",
             cursor: tool === "eraser" ? "not-allowed" : "crosshair",
+            touchAction: "none", // 모바일 스크롤 방지
           }}
-          onMouseDown={handleDown}
-          onMouseMove={handleMove}
-          onMouseUp={handleUp}
-          onMouseLeave={handleUp}
+          onPointerDown={handleDown}
+          onPointerMove={handleMove}
+          onPointerUp={handleUp}
+          onPointerLeave={handleUp}
+          onPointerCancel={handleUp}
         />
       </div>
-      <div>
+
+      {/* 캔버스 확대, 축소 (임시크기) */}
+      {/* <div>
         <button onClick={zoomOut}>−</button>
         <button onClick={zoomIn}>+</button>
-      </div>
+      </div> */}
 
       <div className="mini" style={{ marginTop: 10 }}>
         크기: {widthPx}×{heightPx}px · 화면 표시: {cssWidth}×{cssHeight}px
