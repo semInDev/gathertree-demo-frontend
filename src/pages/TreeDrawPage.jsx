@@ -2,18 +2,31 @@ import { useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import PixelCanvas from "../components/PixelCanvas";
 import Modal from "../components/Modal";
-import { initTree } from "../lib/storage";
+import axios from "axios"; // 소규모 프로젝트라서 그냥 axios만 사용
 
 export default function TreeDrawPage() {
   const navigate = useNavigate();
   const [treeBase64, setTreeBase64] = useState("");
   const [uuid, setUuid] = useState(null);
 
-  const handleSave = () => {
+  // 백엔드랑 연동
+  const handleSave = async () => {
     if (!treeBase64) return alert("트리를 먼저 그려주세요!");
-    const newUuid = crypto.randomUUID();
-    initTree(newUuid, treeBase64); // 저장
-    setUuid(newUuid);
+
+    try {
+      const response = await axios.post("https://api.beour.store/tree", {
+        imageBase64: treeBase64,
+      });
+
+      //백엔드에서 반환한 UUID
+      setUuid(response.data.uuid);
+
+      const newUuid = response.data.data.uuid;
+      setUuid(newUuid);
+    } catch (err) {
+      console.error(err);
+      alert("트리 저장 중 오류 발생");
+    }
   };
 
   const treeUrl = uuid ? `${window.location.origin}/tree/${uuid}` : "";

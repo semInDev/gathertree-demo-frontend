@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Modal from "../components/Modal";
 import CompositeTreeCanvas from "../components/CompositeTreeCanvas";
-import { deleteDecoration, getTree, reorderDecorations } from "../lib/storage";
+import axios from "axios";
 
 export default function TreeViewPage() {
   const { uuid } = useParams();
@@ -12,8 +12,41 @@ export default function TreeViewPage() {
   const [tree, setTree] = useState(null);
   const [finalPng, setFinalPng] = useState("");
 
+  // 트리 조회
+  const fetchTree = async () => {
+    try {
+      const response = await axios.get(`https://api.beour.store/tree/${uuid}`);
+      if (response.data.isSuccess) {
+        const treeData = response.data.data;
+
+        const baseImageUrl = import.meta.env.DEV
+          ? `/trees/${treeData.uuid}/base.png`
+          : `https://cdn.beour.store/trees/${treeData.uuid}/base.png`;
+
+        const decorations = treeData.decorations.map((d) => ({
+          ...d,
+          imageDataUrl: import.meta.env.DEV
+            ? `/trees/${treeData.uuid}/decorations/${d.id}.png`
+            : `https://cdn.beour.store/trees/${treeData.uuid}/decorations/${d.id}.png`,
+        }));
+
+        setTree({
+          uuid: treeData.uuid,
+          baseImageDataUrl: baseImageUrl,
+          decorations,
+          decorationCount: treeData.decorationCount,
+        });
+      } else {
+        alert("트리를 불러오는 중 오류가 발생했습니다.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("트리 조회 중 오류 발생");
+    }
+  };
+
   useEffect(() => {
-    setTree(getTree(uuid));
+    fetchTree();
   }, [uuid]);
 
   const decorateUrl = `${window.location.origin}/tree/${uuid}/decorate`;
@@ -24,18 +57,47 @@ export default function TreeViewPage() {
 
   const ids = useMemo(() => decorations.map((d) => d.id), [decorations]);
 
-  const move = (from, to) => {
+  // 장식 순서 변경
+  const move = async (from, to) => {
     if (to < 0 || to >= ids.length) return;
     const next = [...ids];
     [next[from], next[to]] = [next[to], next[from]];
-    reorderDecorations(uuid, next);
-    setTree(getTree(uuid));
+
+    try {
+      const response = await axios.put(
+        `https://api.beour.store/tree/${uuid}/decorations/reorder`,
+        { order: next }
+      );
+      if (response.data.isSuccess) {
+        fetchTree(); // 변경 후 새로 조회
+      } else {
+        alert("순서 변경 중 오류 발생");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("순서 변경 중 오류 발생");
+    }
   };
 
-  const remove = (id) => {
+  // 장식 삭제
+  const remove = async (decorationId) => {
     if (!confirm("이 장식을 삭제할까요?")) return;
-    deleteDecoration(uuid, id);
-    setTree(getTree(uuid));
+
+    try {
+      const response = await axios.delete(
+        `https://api.beour.store/tree/${uuid}/decorations/${decorationId}`
+      );
+      console.log(response.data);
+
+      if (response.data.isSuccess) {
+        fetchTree(); // 삭제 후 새로 조회
+      } else {
+        alert("장식 삭제 중 오류 발생");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("장식 삭제 중 오류 발생");
+    }
   };
 
   const download = () => {
@@ -53,7 +115,9 @@ export default function TreeViewPage() {
           <h3 style={{ marginTop: 0 }}>트리를 찾을 수 없어요</h3>
           <p className="mini">저장된 트리 링크가 맞는지 확인해주세요.</p>
           <div className="btn-row">
-            <button className="nes-btn" onClick={() => navigate("/")}>홈으로</button>
+            <button className="nes-btn" onClick={() => navigate("/")}>
+              홈으로
+            </button>
           </div>
         </section>
       </div>
@@ -69,7 +133,7 @@ export default function TreeViewPage() {
           현재 장식 수: <b>{count} / 10</b>
         </p>
 
-        {/* ✅ 합성 결과 (트리 + 장식) */}
+        {/* 합성 결과 (트리 + 장식) */}
         <CompositeTreeCanvas
           baseImageDataUrl={tree.baseImageDataUrl}
           decorations={decorations}
@@ -78,11 +142,17 @@ export default function TreeViewPage() {
         />
 
         <div className="btn-row">
-          <button className="nes-btn is-warning" onClick={() => setShowInvite(true)}>
+          <button
+            className="nes-btn is-warning"
+            onClick={() => setShowInvite(true)}
+          >
             장식 요청 링크
           </button>
 
-          <button className="nes-btn" onClick={() => navigate(`/tree/${uuid}/edit`)}>
+          <button
+            className="nes-btn"
+            onClick={() => navigate(`/tree/${uuid}/edit`)}
+          >
             트리 수정하기
           </button>
 
@@ -94,35 +164,42 @@ export default function TreeViewPage() {
         <hr />
 
         <p className="mini">
-          {canEvaluate ? "AI 평가를 받을 수 있어요!" : "장식을 더 모으면 AI에게 평가받을 수 있어요!"}
+          {canEvaluate
+            ? "AI 평가를 받을 수 있어요!"
+            : "장식을 더 모으면 AI에게 평가받을 수 있어요!"}
         </p>
 
         <div className="btn-row">
-            <button
-            className={`nes-btn is-success ${!canEvaluate ? "is-disabled" : ""}`}
+          <button
+            className={`nes-btn is-success ${
+              !canEvaluate ? "is-disabled" : ""
+            }`}
             disabled={!canEvaluate}
             onClick={() => {
-                if (!canEvaluate) return;
-                navigate(`/tree/${uuid}/evaluate?mode=mild`);
+              if (!canEvaluate) return;
+              navigate(`/tree/${uuid}/evaluate?mode=mild`);
             }}
-            >
+          >
             🧁 GPF 순한맛 평가
-            </button>
-            <button
+          </button>
+          <button
             className={`nes-btn is-error ${!canEvaluate ? "is-disabled" : ""}`}
             disabled={!canEvaluate}
             onClick={() => {
-                if (!canEvaluate) return;
-                navigate(`/tree/${uuid}/evaluate?mode=spicy`);
+              if (!canEvaluate) return;
+              navigate(`/tree/${uuid}/evaluate?mode=spicy`);
             }}
-            >
+          >
             🌶 GPT 매운맛 평가
-            </button>
+          </button>
         </div>
       </section>
 
-      {/* ✅ 장식 목록 + 32×32 미리보기 + 순서/삭제 */}
-      <section className="nes-container is-rounded panel" style={{ marginTop: 20 }}>
+      {/* 장식 목록 + 32×32 미리보기 + 순서/삭제 */}
+      <section
+        className="nes-container is-rounded panel"
+        style={{ marginTop: 20 }}
+      >
         <h4 style={{ marginTop: 0 }}>장식 목록</h4>
 
         {decorations.length === 0 ? (
@@ -130,9 +207,22 @@ export default function TreeViewPage() {
         ) : (
           <div style={{ display: "grid", gap: 10 }}>
             {decorations.map((d, idx) => (
-              <div key={d.id} className="nes-container is-rounded" style={{ background: "#fff" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div
+                key={d.id}
+                className="nes-container is-rounded"
+                style={{ background: "#fff" }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    gap: 12,
+                  }}
+                >
+                  <div
+                    style={{ display: "flex", alignItems: "center", gap: 10 }}
+                  >
                     <div
                       className="nes-container is-rounded"
                       style={{
@@ -161,9 +251,24 @@ export default function TreeViewPage() {
                   </div>
 
                   <div className="btn-row" style={{ marginTop: 0 }}>
-                    <button className="nes-btn" onClick={() => move(idx, idx - 1)}>↑</button>
-                    <button className="nes-btn" onClick={() => move(idx, idx + 1)}>↓</button>
-                    <button className="nes-btn is-error" onClick={() => remove(d.id)}>삭제</button>
+                    <button
+                      className="nes-btn"
+                      onClick={() => move(idx, idx - 1)}
+                    >
+                      ↑
+                    </button>
+                    <button
+                      className="nes-btn"
+                      onClick={() => move(idx, idx + 1)}
+                    >
+                      ↓
+                    </button>
+                    <button
+                      className="nes-btn is-error"
+                      onClick={() => remove(d.id)}
+                    >
+                      삭제
+                    </button>
                   </div>
                 </div>
               </div>
@@ -175,7 +280,9 @@ export default function TreeViewPage() {
       {/* 장식 요청 팝업 */}
       {showInvite && (
         <Modal title="장식 요청 링크 🎁" onClose={() => setShowInvite(false)}>
-          <p className="mini">이 링크를 친구에게 보내면 장식을 남길 수 있어요.</p>
+          <p className="mini">
+            이 링크를 친구에게 보내면 장식을 남길 수 있어요.
+          </p>
           <input className="nes-input" value={decorateUrl} readOnly />
           <div className="btn-row">
             <button

@@ -4,6 +4,7 @@ import { DECO, TREE_H, TREE_W, getSlots } from "../lib/slots";
 function loadImg(src) {
   return new Promise((resolve, reject) => {
     const img = new Image();
+    img.crossOrigin = "anonymous"; //CORS 처리
     img.onload = () => resolve(img);
     img.onerror = reject;
     img.src = src;
@@ -57,22 +58,28 @@ export default function CompositeTreeCanvas({
         const deco = list[i];
         const pos = slots[i];
         if (!pos) break;
+
         try {
           const decoImg = await loadImg(deco.imageDataUrl);
           if (cancelled) return;
           ctx.drawImage(decoImg, pos.x, pos.y, DECO, DECO);
         } catch {
           // 이미지 로드 실패하면 스킵
+          console.warn(`Decoration ${deco.id} failed to load.`);
         }
       }
-
-      const out = canvas.toDataURL("image/png");
-      onRenderedDataUrl?.(out);
+      // 최종 png 생성
+      try {
+        const out = canvas.toDataURL("image/png");
+        onRenderedDataUrl?.(out);
+      } catch (err) {
+        console.error("toDataURL failed:", err);
+      }
       //setReady(true);
-        // ✅ 최초 1회만 상태 변경
-        if (!hasRenderedOnce) {
+      // 최초 1회만 상태 변경
+      if (!hasRenderedOnce) {
         setHasRenderedOnce(true);
-        }
+      }
     }
 
     // setReady(false);
@@ -84,22 +91,25 @@ export default function CompositeTreeCanvas({
   }, [baseImageDataUrl, list, onRenderedDataUrl, slots]);
 
   return (
-    <div className="nes-container is-rounded" style={{ background: "#fff", padding: 12 }}>
+    <div
+      className="nes-container is-rounded"
+      style={{ background: "#fff", padding: 12 }}
+    >
       <canvas
         ref={canvasRef}
         style={{
-          width: TREE_W * scale,
-          height: TREE_H * scale,
+          padding: 12,
+          marginTop: 12,
+          width: "100%",
           border: "2px solid #111",
           imageRendering: "pixelated",
+          maxWidth: "100%",
+          aspectRatio: "160 / 192",
         }}
       />
-        <div className="mini" style={{ marginTop: 10 }}>
-        {hasRenderedOnce
-            ? `합성 완료 · ${TREE_W}×${TREE_H}px`
-            : "합성 중..."}
-        </div>
-
+      <div className="mini" style={{ marginTop: 10 }}>
+        {hasRenderedOnce ? `합성 완료 · ${TREE_W}×${TREE_H}px` : "합성 중..."}
+      </div>
     </div>
   );
 }
