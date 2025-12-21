@@ -12,7 +12,7 @@ export default function PixelCanvas({
   const [tool, setTool] = useState("pen"); // pen | eraser
   const [brushSize, setBrushSize] = useState(2); //  펜 굵기
   const [isDown, setIsDown] = useState(false);
-  const [scale, setScale] = useState(10); //확대, 축소를 위함
+  const [scale, setScale] = useState(10);
 
   const cssWidth = widthPx * scale;
   const cssHeight = heightPx * scale;
@@ -246,9 +246,9 @@ export default function PixelCanvas({
         />
       </div>
 
-      {/* <div className="mini" style={{ marginTop: 10 }}>
+      <div className="mini" style={{ marginTop: 10 }}>
         크기: {widthPx}×{heightPx}px · 화면 표시: {cssWidth}×{cssHeight}px
-      </div> */}
+      </div>
     </div>
   );
 }
