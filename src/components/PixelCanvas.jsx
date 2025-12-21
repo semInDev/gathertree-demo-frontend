@@ -1,33 +1,24 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
-/**
- * PixelCanvas
- * - widthPx, heightPx: 실제 픽셀 캔버스 크기 (예: 32x32, 160x192)
- * - scale: 화면에서 보여줄 확대 배율
- * - initialImageDataUrl: 기존 이미지 로드 (옵션)
- * - onChange: (dataUrl) => void
- */
 export default function PixelCanvas({
   widthPx,
   heightPx,
-  scale = 10,
   initialImageDataUrl,
   onChange,
 }) {
   const canvasRef = useRef(null);
 
-  const [color, setColor] = useState("#d62c2c");
+  const [color, setColor] = useState("#2f7141");
   const [tool, setTool] = useState("pen"); // pen | eraser
-  const [brushSize, setBrushSize] = useState(1); // ✅ 펜 굵기
+  const [brushSize, setBrushSize] = useState(2); //  펜 굵기
   const [isDown, setIsDown] = useState(false);
+  const [scale, setScale] = useState(10); //확대, 축소를 위함
 
   const cssWidth = widthPx * scale;
   const cssHeight = heightPx * scale;
 
-  const ctx = useMemo(() => {
-    const c = canvasRef.current;
-    return c ? c.getContext("2d", { willReadFrequently: true }) : null;
-  }, [canvasRef.current]);
+  // getContext 매번 호출 리팩토링
+  const ctxRef = useRef(null);
 
   /* -----------------------------
    * 캔버스 초기화 & 이미지 로드
@@ -39,22 +30,25 @@ export default function PixelCanvas({
     c.width = widthPx;
     c.height = heightPx;
 
-    const context = c.getContext("2d");
-    context.imageSmoothingEnabled = false;
-    context.clearRect(0, 0, widthPx, heightPx);
+    const ctx = c.getContext("2d", {
+      willReadFrequently: true,
+    });
+    ctx.imageSmoothingEnabled = false;
+    ctx.clearRect(0, 0, widthPx, heightPx);
+
+    ctxRef.current = ctx; // 여기서 한 번만 저장
 
     if (initialImageDataUrl) {
       const img = new Image();
       img.onload = () => {
-        context.clearRect(0, 0, widthPx, heightPx);
-        context.drawImage(img, 0, 0, widthPx, heightPx);
+        ctx.clearRect(0, 0, widthPx, heightPx);
+        ctx.drawImage(img, 0, 0, widthPx, heightPx);
         emit();
       };
       img.src = initialImageDataUrl;
     } else {
       emit();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [widthPx, heightPx, initialImageDataUrl]);
 
   /* -----------------------------
@@ -68,27 +62,44 @@ export default function PixelCanvas({
   };
 
   /* -----------------------------
-   * 마우스 → 픽셀 좌표 변환
+   * 마우스 → 픽셀 좌표 변환, 모바일, 태블릿펜 모두 가능하게
    * ----------------------------- */
   const getPixelFromEvent = (e) => {
     const rect = canvasRef.current.getBoundingClientRect();
-    const x = Math.floor(((e.clientX - rect.left) / rect.width) * widthPx);
-    const y = Math.floor(((e.clientY - rect.top) / rect.height) * heightPx);
+
+    const clientX = e.clientX ?? e.touches?.[0]?.clientX;
+    const clientY = e.clientY ?? e.touches?.[0]?.clientY;
+
+    const x = Math.floor(((clientX - rect.left) / rect.width) * widthPx);
+    const y = Math.floor(((clientY - rect.top) / rect.height) * heightPx);
+
     return {
       x: Math.max(0, Math.min(widthPx - 1, x)),
       y: Math.max(0, Math.min(heightPx - 1, y)),
     };
   };
 
+  // 선 안끊겨보이게 하려고
+  const lastPosRef = useRef(null);
+
+  const drawLine = (from, to) => {
+    const dx = to.x - from.x;
+    const dy = to.y - from.y;
+    const steps = Math.max(Math.abs(dx), Math.abs(dy));
+
+    for (let i = 0; i <= steps; i++) {
+      const x = Math.round(from.x + (dx * i) / steps);
+      const y = Math.round(from.y + (dy * i) / steps);
+      drawBrush(x, y);
+    }
+  };
+
   /* -----------------------------
    * 브러시 드로잉 (굵기 지원)
    * ----------------------------- */
   const drawBrush = (x, y) => {
-    const c = canvasRef.current;
-    if (!c) return;
-
-    const context = c.getContext("2d");
-    context.imageSmoothingEnabled = false;
+    const ctx = ctxRef.current;
+    if (!ctx) return;
 
     const half = Math.floor(brushSize / 2);
 
@@ -100,10 +111,10 @@ export default function PixelCanvas({
         if (px < 0 || py < 0 || px >= widthPx || py >= heightPx) continue;
 
         if (tool === "eraser") {
-          context.clearRect(px, py, 1, 1);
+          ctx.clearRect(px, py, 1, 1);
         } else {
-          context.fillStyle = color;
-          context.fillRect(px, py, 1, 1);
+          ctx.fillStyle = color;
+          ctx.fillRect(px, py, 1, 1);
         }
       }
     }
@@ -114,34 +125,37 @@ export default function PixelCanvas({
    * ----------------------------- */
   const handleDown = (e) => {
     setIsDown(true);
-    const { x, y } = getPixelFromEvent(e);
-    drawBrush(x, y);
-    emit();
+    const pos = getPixelFromEvent(e);
+    lastPosRef.current = pos;
+    drawBrush(pos.x, pos.y);
   };
 
   const handleMove = (e) => {
-    if (!isDown) return;
-    const { x, y } = getPixelFromEvent(e);
-    drawBrush(x, y);
-    emit();
+    if (!isDown || !lastPosRef.current) return;
+    const pos = getPixelFromEvent(e);
+    drawLine(lastPosRef.current, pos);
+    lastPosRef.current = pos;
   };
 
-  const handleUp = () => setIsDown(false);
+  const handleUp = () => {
+    setIsDown(false);
+    emit();
+  };
 
   /* -----------------------------
    * 전체 지우기
    * ----------------------------- */
   const clearAll = () => {
-    const c = canvasRef.current;
-    if (!c) return;
-    const context = c.getContext("2d");
-    context.clearRect(0, 0, widthPx, heightPx);
+    const ctx = ctxRef.current;
+    if (!ctx) return;
+
+    ctx.clearRect(0, 0, widthPx, heightPx);
     emit();
   };
 
   return (
     <div>
-      {/* 🔧 툴바 */}
+      {/*  툴바 */}
       <div className="btn-row" style={{ alignItems: "center" }}>
         <button
           className={`nes-btn ${tool === "pen" ? "is-primary" : ""}`}
@@ -159,7 +173,7 @@ export default function PixelCanvas({
           지우개
         </button>
 
-        {/* ✅ 펜 굵기 */}
+        {/*  펜 굵기 */}
         <label
           className="mini"
           style={{ display: "flex", alignItems: "center", gap: 8 }}
@@ -197,7 +211,7 @@ export default function PixelCanvas({
         </button>
       </div>
 
-      {/* 🎨 캔버스 */}
+      {/*  캔버스 */}
       <div
         className="nes-container is-rounded"
         style={{
@@ -205,6 +219,9 @@ export default function PixelCanvas({
           padding: 12,
           marginTop: 12,
           display: "inline-block",
+
+          maxWidth: "100%", // 부모보다 커지지 않게
+          height: "auto",
         }}
       >
         <canvas
@@ -212,20 +229,26 @@ export default function PixelCanvas({
           style={{
             width: cssWidth,
             height: cssHeight,
+
+            maxWidth: "100%", // 부모보다 커지지 않게
+            height: "auto",
+
             border: "2px solid #111",
             imageRendering: "pixelated",
             cursor: tool === "eraser" ? "not-allowed" : "crosshair",
+            touchAction: "none", // 모바일 스크롤 방지
           }}
-          onMouseDown={handleDown}
-          onMouseMove={handleMove}
-          onMouseUp={handleUp}
-          onMouseLeave={handleUp}
+          onPointerDown={handleDown}
+          onPointerMove={handleMove}
+          onPointerUp={handleUp}
+          onPointerLeave={handleUp}
+          onPointerCancel={handleUp}
         />
       </div>
 
-      <div className="mini" style={{ marginTop: 10 }}>
+      {/* <div className="mini" style={{ marginTop: 10 }}>
         크기: {widthPx}×{heightPx}px · 화면 표시: {cssWidth}×{cssHeight}px
-      </div>
+      </div> */}
     </div>
   );
 }
