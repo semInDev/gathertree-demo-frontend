@@ -61,7 +61,13 @@ export default function DecorationPage() {
       }
     } catch (err) {
       console.error(err);
-      alert("장식 추가 중 오류 발생");
+      console.error(err);
+      if (err.response && err.response.status === 400) {
+        alert(
+          "장식 개수가 초과되었습니다! 다른 사용자가 동시에 추가했을 수 있어요."
+        );
+        alert("장식 추가 중 오류 발생");
+      }
     }
   };
 
@@ -79,6 +85,8 @@ export default function DecorationPage() {
       </div>
     );
   }
+
+  const isMaxDecorations = (tree.decorations?.length ?? 0) >= 10;
 
   return (
     <div className="app-shell">
@@ -103,9 +111,20 @@ export default function DecorationPage() {
         </div>
 
         <div className="btn-row">
-          <button className="nes-btn is-primary" onClick={handleSubmit}>
+          <button
+            className={`nes-btn is-primary ${
+              isMaxDecorations ? "is-disabled" : ""
+            }`}
+            onClick={handleSubmit}
+            disabled={isMaxDecorations}
+          >
             장식 제출하기
           </button>
+          {isMaxDecorations && (
+            <p className="mini" style={{ color: "red", marginTop: 8 }}>
+              장식은 최대 10개까지 가능합니다.
+            </p>
+          )}
         </div>
       </section>
     </div>
