@@ -9,6 +9,7 @@ export default function TreeViewPage() {
   const navigate = useNavigate();
 
   const [showInvite, setShowInvite] = useState(false);
+  const [inviteType, setInviteType] = useState("decorate"); // decorate || owner
   const [tree, setTree] = useState(null);
   const [finalPng, setFinalPng] = useState("");
 
@@ -50,6 +51,7 @@ export default function TreeViewPage() {
   }, [uuid]);
 
   const decorateUrl = `${window.location.origin}/tree/${uuid}/decorate`;
+  const ownerUrl = window.location.href; // 현재 주소
   const decorations = tree?.decorations ?? [];
   const count = decorations.length;
 
@@ -167,8 +169,11 @@ export default function TreeViewPage() {
           </button>
 
           <button
-            className="nes-btn is-warning"
-            onClick={() => setShowInvite(true)}
+            className="nes-btn is-primary"
+            onClick={() => {
+              setInviteType("owner");
+              setShowInvite(true);
+            }}
           >
             내 트리 링크 저장
           </button>
@@ -294,14 +299,22 @@ export default function TreeViewPage() {
 
       {/* 장식 요청 팝업 */}
       {showInvite && (
-        <Modal title="장식 요청 링크" onClose={() => setShowInvite(false)}>
-          <p>이 링크를 친구에게 보내면 트리를 꾸밀 수 있어요</p>
+        <Modal
+          title={inviteType === "decorate" ? "장식 요청 링크" : "내 트리 링크"}
+          onClose={() => setShowInvite(false)}
+        >
+          <p>
+            {inviteType === "decorate"
+              ? "이 링크를 친구에게 보내면 트리를 꾸밀 수 있어요"
+              : "이 링크는 내 트리를 관리하는 유일한 주소입니다."}
+          </p>
           <input className="nes-input" value={decorateUrl} readOnly />
           <div className="btn-row">
             <button
               className="nes-btn is-primary"
               onClick={() => {
-                navigator.clipboard.writeText(decorateUrl);
+                const url = inviteType === "decorate" ? decorateUrl : ownerUrl;
+                navigator.clipboard.writeText(url);
                 alert("복사 완료!");
               }}
             >

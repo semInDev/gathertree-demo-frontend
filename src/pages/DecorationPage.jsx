@@ -53,7 +53,7 @@ export default function DecorationPage() {
       );
 
       if (response.data.isSuccess) {
-        alert("장식이 추가됐어요! (트리는 주인만 확인 가능)");
+        alert("장식이 추가됐습니다.");
         // 홈으로 이동
         window.location.href = "/";
       } else {
@@ -91,8 +91,9 @@ export default function DecorationPage() {
   return (
     <div className="app-shell">
       <section className="nes-container is-rounded panel">
-        <h3 style={{ marginTop: 0 }}>트리를 꾸며주세요 🎁</h3>
-        <p className="mini">32×32 픽셀 장식 + 닉네임을 남겨주세요.</p>
+        <h3 style={{ marginTop: 0, paddingBottom: "1rem" }}>
+          트리를 꾸며주세요 🎁
+        </h3>
 
         <PixelCanvas
           widthPx={32}
@@ -102,7 +103,7 @@ export default function DecorationPage() {
         />
 
         <div className="nes-field" style={{ marginTop: 16 }}>
-          <label className="mini">닉네임</label>
+          <label>닉네임</label>
           <input
             className="nes-input"
             value={name}

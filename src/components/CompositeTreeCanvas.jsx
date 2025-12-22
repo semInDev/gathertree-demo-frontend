@@ -107,9 +107,9 @@ export default function CompositeTreeCanvas({
           aspectRatio: "160 / 192",
         }}
       />
-      <div className="mini" style={{ marginTop: 10 }}>
+      {/* <div className="mini" style={{ marginTop: 10 }}>
         {hasRenderedOnce ? `합성 완료 · ${TREE_W}×${TREE_H}px` : "합성 중..."}
-      </div>
+      </div> */}
     </div>
   );
 }
