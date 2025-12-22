@@ -33,7 +33,6 @@ export default function TreeEditPage() {
         alert("트리를 불러오는 중 오류가 발생했습니다.");
       }
     } catch (err) {
-      console.error(err);
       alert("트리 조회 중 오류 발생");
     } finally {
       setLoading(false);
@@ -59,7 +58,6 @@ export default function TreeEditPage() {
         alert("트리 수정 중 오류 발생");
       }
     } catch (err) {
-      console.error(err);
       alert("트리 수정 중 오류 발생");
     }
   };

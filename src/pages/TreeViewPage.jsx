@@ -41,7 +41,6 @@ export default function TreeViewPage() {
         alert("트리를 불러오는 중 오류가 발생했습니다.");
       }
     } catch (err) {
-      console.error(err);
       alert("트리 조회 중 오류 발생");
     }
   };
@@ -76,7 +75,6 @@ export default function TreeViewPage() {
         alert("순서 변경 중 오류 발생");
       }
     } catch (err) {
-      console.error(err);
       alert("순서 변경 중 오류 발생");
     }
   };
@@ -89,7 +87,6 @@ export default function TreeViewPage() {
       const response = await axios.delete(
         `https://api.beour.store/tree/${uuid}/decorations/${decorationId}`
       );
-      console.log(response.data);
 
       if (response.data.isSuccess) {
         fetchTree(); // 삭제 후 새로 조회
@@ -97,7 +94,6 @@ export default function TreeViewPage() {
         alert("장식 삭제 중 오류 발생");
       }
     } catch (err) {
-      console.error(err);
       alert("장식 삭제 중 오류 발생");
     }
   };
@@ -139,7 +135,6 @@ export default function TreeViewPage() {
         <CompositeTreeCanvas
           baseImageDataUrl={tree.baseImageDataUrl}
           decorations={decorations}
-          scale={3}
           onRenderedDataUrl={setFinalPng}
         />
 
@@ -153,35 +148,42 @@ export default function TreeViewPage() {
           <button
             className="nes-btn is-warning"
             onClick={() => setShowInvite(true)}
+            style={{ fontWeight: 600 }}
           >
             장식 요청 링크
           </button>
 
-          <button
+          {/* 버그로 잠시 주석처리할게요.. */}
+          {/* <button
             className="nes-btn"
             onClick={() => navigate(`/tree/${uuid}/edit`)}
           >
             트리 수정하기
-          </button>
-
-          <button className="nes-btn is-success" onClick={download}>
-            이미지 다운로드
-          </button>
+          </button> */}
 
           <button
-            className="nes-btn is-primary"
+            className="nes-btn"
             onClick={() => {
               setInviteType("owner");
               setShowInvite(true);
             }}
+            style={{ fontWeight: 600 }}
           >
             내 트리 링크 저장
+          </button>
+
+          <button
+            className="nes-btn is-success"
+            onClick={download}
+            style={{ fontWeight: 600 }}
+          >
+            이미지 다운로드
           </button>
         </div>
 
         <hr />
 
-        <p style={{ fontSize: "12px", paddingTop: "3px" }}>
+        <p style={{ fontSize: "1rem", paddingTop: "3px" }}>
           {canEvaluate
             ? "AI 평가 받기"
             : "트리를 완성하면 AI에게 평가받을 수 있어요."}
@@ -197,6 +199,7 @@ export default function TreeViewPage() {
               if (!canEvaluate) return;
               navigate(`/tree/${uuid}/evaluate?mode=mild`);
             }}
+            style={{ fontWeight: 600 }}
           >
             GPF 순한맛 평가
           </button>
@@ -207,6 +210,7 @@ export default function TreeViewPage() {
               if (!canEvaluate) return;
               navigate(`/tree/${uuid}/evaluate?mode=spicy`);
             }}
+            style={{ fontWeight: 600 }}
           >
             GPT 매운맛 평가
           </button>
@@ -221,7 +225,7 @@ export default function TreeViewPage() {
         <h3 style={{ marginTop: 0 }}>장식 목록</h3>
 
         {decorations.length === 0 ? (
-          <p style={{ fontSize: "12px" }}>
+          <p style={{ fontSize: "1rem" }}>
             아직 장식이 없어요. 친구에게 장식을 그려달라고 요청하세요!
           </p>
         ) : (
