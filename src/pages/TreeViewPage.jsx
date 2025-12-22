@@ -55,7 +55,7 @@ export default function TreeViewPage() {
   const decorations = tree?.decorations ?? [];
   const count = decorations.length;
 
-  const canEvaluate = count >= 5;
+  const canEvaluate = count === 10;
 
   const ids = useMemo(() => decorations.map((d) => d.id), [decorations]);
 

@@ -4,6 +4,8 @@ import PixelCanvas from "../components/PixelCanvas";
 import Modal from "../components/Modal";
 import axios from "axios"; // 소규모 프로젝트라서 그냥 axios만 사용
 
+import baseTree from "../assets/base-tree.png";
+
 export default function TreeDrawPage() {
   const navigate = useNavigate();
   const [treeBase64, setTreeBase64] = useState("");
@@ -79,6 +81,7 @@ export default function TreeDrawPage() {
             widthPx={160}
             heightPx={192}
             scale={scale}
+            baseImage={baseTree}
             onChange={setTreeBase64}
           />
         </div>

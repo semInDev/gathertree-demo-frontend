@@ -1,16 +1,18 @@
 import { useEffect, useRef, useState } from "react";
+import "./PixelCanvas.css";
 
 export default function PixelCanvas({
   widthPx,
   heightPx,
   initialImageDataUrl,
+  baseImage, // 기본 트리 이미지
   onChange,
 }) {
   const canvasRef = useRef(null);
 
-  const [color, setColor] = useState("#2f7141");
+  const [color, setColor] = useState("#000000");
   const [tool, setTool] = useState("pen"); // pen | eraser
-  const [brushSize, setBrushSize] = useState(2); //  펜 굵기
+  const [brushSize, setBrushSize] = useState(1); //  펜 굵기
   const [isDown, setIsDown] = useState(false);
   const [scale, setScale] = useState(10);
 
@@ -38,17 +40,26 @@ export default function PixelCanvas({
 
     ctxRef.current = ctx; // 여기서 한 번만 저장
 
-    if (initialImageDataUrl) {
-      const img = new Image();
-      img.onload = () => {
-        ctx.clearRect(0, 0, widthPx, heightPx);
+    const drawAll = async () => {
+      // 1. 기본 트리 먼저
+      if (baseImage) {
+        const baseImg = new Image();
+        baseImg.src = baseImage;
+        await baseImg.decode();
+        ctx.drawImage(baseImg, 0, 0, widthPx, heightPx);
+      }
+
+      // 2. 기존 이미지 (수정 페이지용)
+      if (initialImageDataUrl) {
+        const img = new Image();
+        img.src = initialImageDataUrl;
+        await img.decode();
         ctx.drawImage(img, 0, 0, widthPx, heightPx);
-        emit();
-      };
-      img.src = initialImageDataUrl;
-    } else {
+      }
       emit();
-    }
+    };
+
+    drawAll();
   }, [widthPx, heightPx, initialImageDataUrl]);
 
   /* -----------------------------
@@ -145,16 +156,25 @@ export default function PixelCanvas({
   /* -----------------------------
    * 전체 지우기
    * ----------------------------- */
-  const clearAll = () => {
+
+  const clearAll = async () => {
     const ctx = ctxRef.current;
     if (!ctx) return;
 
     ctx.clearRect(0, 0, widthPx, heightPx);
+
+    if (baseImage) {
+      const img = new Image();
+      img.src = baseImage;
+      await img.decode();
+      ctx.drawImage(img, 0, 0, widthPx, heightPx);
+    }
+
     emit();
   };
 
   return (
-    <div>
+    <div style={{ marginBottom: "2rem" }}>
       {/*  툴바 */}
       <div className="btn-row" style={{ alignItems: "center" }}>
         <button
@@ -211,7 +231,6 @@ export default function PixelCanvas({
         </button>
       </div>
 
-      {/*  캔버스 */}
       <div
         className="nes-container is-rounded"
         style={{
@@ -219,24 +238,20 @@ export default function PixelCanvas({
           padding: 12,
           marginTop: 12,
           display: "inline-block",
-
-          maxWidth: "100%", // 부모보다 커지지 않게
-          height: "auto",
+          maxWidth: "100%",
         }}
       >
         <canvas
           ref={canvasRef}
+          className="canvas-transparent"
           style={{
             width: cssWidth,
             height: cssHeight,
-
-            maxWidth: "100%", // 부모보다 커지지 않게
-            height: "auto",
-
+            maxWidth: "100%",
             border: "2px solid #111",
             imageRendering: "pixelated",
             cursor: tool === "eraser" ? "not-allowed" : "crosshair",
-            touchAction: "none", // 모바일 스크롤 방지
+            touchAction: "none",
           }}
           onPointerDown={handleDown}
           onPointerMove={handleMove}
@@ -245,10 +260,6 @@ export default function PixelCanvas({
           onPointerCancel={handleUp}
         />
       </div>
-
-      {/* <div className="mini" style={{ marginTop: 10 }}>
-        크기: {widthPx}×{heightPx}px · 화면 표시: {cssWidth}×{cssHeight}px
-      </div> */}
     </div>
   );
 }

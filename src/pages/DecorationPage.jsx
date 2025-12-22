@@ -92,7 +92,7 @@ export default function DecorationPage() {
     <div className="app-shell">
       <section className="nes-container is-rounded panel">
         <h3 style={{ marginTop: 0, paddingBottom: "1rem" }}>
-          트리를 꾸며주세요 🎁
+          트리 장식을 그려주세요
         </h3>
 
         <PixelCanvas
@@ -102,7 +102,7 @@ export default function DecorationPage() {
           onChange={setImageDataUrl}
         />
 
-        <div className="nes-field" style={{ marginTop: 16 }}>
+        <div className="nes-field" style={{ marginBottom: "2rem" }}>
           <label>닉네임</label>
           <input
             className="nes-input"
