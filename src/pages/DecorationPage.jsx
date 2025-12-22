@@ -53,9 +53,9 @@ export default function DecorationPage() {
       );
 
       if (response.data.isSuccess) {
-        alert("장식이 추가됐어요! 🎁 (트리 주인 페이지에서 확인 가능)");
-        // 트리 페이지로 이동
-        window.location.href = `/tree/${uuid}`;
+        alert("장식이 추가됐어요! (트리는 주인만 확인 가능)");
+        // 홈으로 이동
+        window.location.href = "/";
       } else {
         alert("장식 추가 중 오류 발생: " + response.data.message);
       }

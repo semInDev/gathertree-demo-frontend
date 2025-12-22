@@ -246,9 +246,9 @@ export default function PixelCanvas({
         />
       </div>
 
-      <div className="mini" style={{ marginTop: 10 }}>
+      {/* <div className="mini" style={{ marginTop: 10 }}>
         크기: {widthPx}×{heightPx}px · 화면 표시: {cssWidth}×{cssHeight}px
-      </div>
+      </div> */}
     </div>
   );
 }
