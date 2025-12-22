@@ -4,6 +4,8 @@ import PixelCanvas from "../components/PixelCanvas";
 import Modal from "../components/Modal";
 import axios from "axios"; // 소규모 프로젝트라서 그냥 axios만 사용
 
+import baseTree from "../assets/base-tree.png";
+
 export default function TreeDrawPage() {
   const navigate = useNavigate();
   const [treeBase64, setTreeBase64] = useState("");
@@ -63,7 +65,7 @@ export default function TreeDrawPage() {
   return (
     <div className="app-shell">
       <section className="nes-container is-rounded panel">
-        <h3 style={{ marginTop: 0 }}>트리 그리기 🎄</h3>
+        <h3 style={{ marginTop: 0 }}>트리 그리기</h3>
 
         <div
           ref={canvasWrapperRef}
@@ -79,6 +81,7 @@ export default function TreeDrawPage() {
             widthPx={160}
             heightPx={192}
             scale={scale}
+            baseImage={baseTree}
             onChange={setTreeBase64}
           />
         </div>
@@ -94,14 +97,13 @@ export default function TreeDrawPage() {
       </section>
 
       {uuid && (
-        <Modal title="트리가 저장되었습니다 🎄" onClose={() => setUuid(null)}>
-          <p className="mini">
-            아래 링크는 <b>트리를 관리하는 유일한 주소</b>입니다.
-            <br />
-            절대 잃어버리지 마세요!
+        <Modal title="트리가 저장되었습니다." onClose={() => setUuid(null)}>
+          <br />
+          <p>
+            아래 링크는 <b>트리를 관리하는 유일한 주소</b>입니다. 절대
+            잃어버리지 마세요!
           </p>
           <div className="nes-field">
-            <label className="mini">트리 링크</label>
             <input className="nes-input" value={treeUrl} readOnly />
           </div>
           <div className="btn-row">

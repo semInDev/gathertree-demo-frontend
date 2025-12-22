@@ -9,6 +9,7 @@ export default function TreeViewPage() {
   const navigate = useNavigate();
 
   const [showInvite, setShowInvite] = useState(false);
+  const [inviteType, setInviteType] = useState("decorate"); // decorate || owner
   const [tree, setTree] = useState(null);
   const [finalPng, setFinalPng] = useState("");
 
@@ -50,10 +51,11 @@ export default function TreeViewPage() {
   }, [uuid]);
 
   const decorateUrl = `${window.location.origin}/tree/${uuid}/decorate`;
+  const ownerUrl = window.location.href; // 현재 주소
   const decorations = tree?.decorations ?? [];
   const count = decorations.length;
 
-  const canEvaluate = count >= 5;
+  const canEvaluate = count === 10;
 
   const ids = useMemo(() => decorations.map((d) => d.id), [decorations]);
 
@@ -127,10 +129,10 @@ export default function TreeViewPage() {
   return (
     <div className="app-shell">
       <section className="nes-container is-rounded panel">
-        <h3 style={{ marginTop: 0 }}>내 트리 🎄</h3>
-
-        <p className="mini">
-          현재 장식 수: <b>{count} / 10</b>
+        <h2 style={{ marginTop: 0 }}>내 트리 확인하기</h2>
+        <br />
+        <p>
+          <b>현재 장식 수 : {count} / 10</b>
         </p>
 
         {/* 합성 결과 (트리 + 장식) */}
@@ -141,7 +143,13 @@ export default function TreeViewPage() {
           onRenderedDataUrl={setFinalPng}
         />
 
-        <div className="btn-row">
+        <div
+          className="btn-row"
+          style={{
+            paddingTop: "15px",
+            paddingBottom: "15px",
+          }}
+        >
           <button
             className="nes-btn is-warning"
             onClick={() => setShowInvite(true)}
@@ -159,14 +167,24 @@ export default function TreeViewPage() {
           <button className="nes-btn is-success" onClick={download}>
             이미지 다운로드
           </button>
+
+          <button
+            className="nes-btn is-primary"
+            onClick={() => {
+              setInviteType("owner");
+              setShowInvite(true);
+            }}
+          >
+            내 트리 링크 저장
+          </button>
         </div>
 
         <hr />
 
-        <p className="mini">
+        <p style={{ fontSize: "12px", paddingTop: "3px" }}>
           {canEvaluate
-            ? "AI 평가를 받을 수 있어요!"
-            : "장식을 더 모으면 AI에게 평가받을 수 있어요!"}
+            ? "AI 평가 받기"
+            : "트리를 완성하면 AI에게 평가받을 수 있어요."}
         </p>
 
         <div className="btn-row">
@@ -180,7 +198,7 @@ export default function TreeViewPage() {
               navigate(`/tree/${uuid}/evaluate?mode=mild`);
             }}
           >
-            🧁 GPF 순한맛 평가
+            GPF 순한맛 평가
           </button>
           <button
             className={`nes-btn is-error ${!canEvaluate ? "is-disabled" : ""}`}
@@ -190,7 +208,7 @@ export default function TreeViewPage() {
               navigate(`/tree/${uuid}/evaluate?mode=spicy`);
             }}
           >
-            🌶 GPT 매운맛 평가
+            GPT 매운맛 평가
           </button>
         </div>
       </section>
@@ -200,10 +218,12 @@ export default function TreeViewPage() {
         className="nes-container is-rounded panel"
         style={{ marginTop: 20 }}
       >
-        <h4 style={{ marginTop: 0 }}>장식 목록</h4>
+        <h3 style={{ marginTop: 0 }}>장식 목록</h3>
 
         {decorations.length === 0 ? (
-          <p className="mini">아직 장식이 없어요.</p>
+          <p style={{ fontSize: "12px" }}>
+            아직 장식이 없어요. 친구에게 장식을 그려달라고 요청하세요!
+          </p>
         ) : (
           <div style={{ display: "grid", gap: 10 }}>
             {decorations.map((d, idx) => (
@@ -279,16 +299,22 @@ export default function TreeViewPage() {
 
       {/* 장식 요청 팝업 */}
       {showInvite && (
-        <Modal title="장식 요청 링크 🎁" onClose={() => setShowInvite(false)}>
-          <p className="mini">
-            이 링크를 친구에게 보내면 장식을 남길 수 있어요.
+        <Modal
+          title={inviteType === "decorate" ? "장식 요청 링크" : "내 트리 링크"}
+          onClose={() => setShowInvite(false)}
+        >
+          <p>
+            {inviteType === "decorate"
+              ? "이 링크를 친구에게 보내면 트리를 꾸밀 수 있어요"
+              : "이 링크는 내 트리를 관리하는 유일한 주소입니다."}
           </p>
           <input className="nes-input" value={decorateUrl} readOnly />
           <div className="btn-row">
             <button
               className="nes-btn is-primary"
               onClick={() => {
-                navigator.clipboard.writeText(decorateUrl);
+                const url = inviteType === "decorate" ? decorateUrl : ownerUrl;
+                navigator.clipboard.writeText(url);
                 alert("복사 완료!");
               }}
             >

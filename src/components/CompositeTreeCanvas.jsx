@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { DECO, TREE_H, TREE_W, getSlots } from "../lib/slots";
+import "./PixelCanvas.css";
 
 function loadImg(src) {
   return new Promise((resolve, reject) => {
@@ -97,6 +98,7 @@ export default function CompositeTreeCanvas({
     >
       <canvas
         ref={canvasRef}
+        className="canvas-transparent"
         style={{
           padding: 12,
           marginTop: 12,
@@ -107,9 +109,9 @@ export default function CompositeTreeCanvas({
           aspectRatio: "160 / 192",
         }}
       />
-      <div className="mini" style={{ marginTop: 10 }}>
+      {/* <div className="mini" style={{ marginTop: 10 }}>
         {hasRenderedOnce ? `합성 완료 · ${TREE_W}×${TREE_H}px` : "합성 중..."}
-      </div>
+      </div> */}
     </div>
   );
 }

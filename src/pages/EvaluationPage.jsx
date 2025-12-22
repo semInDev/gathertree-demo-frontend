@@ -21,7 +21,7 @@ export default function EvaluationPage() {
     <div className="app-shell">
       <section className="nes-container is-rounded panel">
         <h3 style={{ marginTop: 0 }}>
-          🎄 평가 결과 ({mode === "mild" ? "🧁 순한맛" : "🌶 매운맛"})
+          평가 결과 ({mode === "mild" ? "순한맛" : "매운맛"})
         </h3>
 
         {/* 트리 이미지 */}
@@ -35,20 +35,20 @@ export default function EvaluationPage() {
         </div>
 
         {/* 점수 */}
-        <h4>총점: {mockResult.score}점</h4>
+        <h4>총점: {mockResult.score} 점</h4>
 
         {/* 평가 코멘트 */}
-        <div className="nes-container is-rounded" style={{ background: "#fff" }}>
-          <p className="mini">{mockResult.comment}</p>
+        <div
+          className="nes-container is-rounded"
+          style={{ background: "#fff" }}
+        >
+          <p>{mockResult.comment}</p>
         </div>
 
         {/* 버튼 */}
         <div className="btn-row">
           <button className="nes-btn is-success">이미지 다운로드</button>
-          <button
-            className="nes-btn"
-            onClick={() => navigate(`/tree/${uuid}`)}
-          >
+          <button className="nes-btn" onClick={() => navigate(`/tree/${uuid}`)}>
             트리로 돌아가기
           </button>
         </div>
