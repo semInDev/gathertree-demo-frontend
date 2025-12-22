@@ -41,7 +41,6 @@ export default function TreeViewPage() {
         alert("트리를 불러오는 중 오류가 발생했습니다.");
       }
     } catch (err) {
-      console.error(err);
       alert("트리 조회 중 오류 발생");
     }
   };
@@ -76,7 +75,6 @@ export default function TreeViewPage() {
         alert("순서 변경 중 오류 발생");
       }
     } catch (err) {
-      console.error(err);
       alert("순서 변경 중 오류 발생");
     }
   };
@@ -89,7 +87,6 @@ export default function TreeViewPage() {
       const response = await axios.delete(
         `https://api.beour.store/tree/${uuid}/decorations/${decorationId}`
       );
-      console.log(response.data);
 
       if (response.data.isSuccess) {
         fetchTree(); // 삭제 후 새로 조회
@@ -97,7 +94,6 @@ export default function TreeViewPage() {
         alert("장식 삭제 중 오류 발생");
       }
     } catch (err) {
-      console.error(err);
       alert("장식 삭제 중 오류 발생");
     }
   };
@@ -139,7 +135,6 @@ export default function TreeViewPage() {
         <CompositeTreeCanvas
           baseImageDataUrl={tree.baseImageDataUrl}
           decorations={decorations}
-          scale={3}
           onRenderedDataUrl={setFinalPng}
         />
 

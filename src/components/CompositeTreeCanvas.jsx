@@ -15,7 +15,6 @@ function loadImg(src) {
 export default function CompositeTreeCanvas({
   baseImageDataUrl,
   decorations, // [{id, authorName, imageDataUrl}]
-  scale = 3,
   onRenderedDataUrl, // (pngDataUrl) => void
 }) {
   const canvasRef = useRef(null);
@@ -66,16 +65,13 @@ export default function CompositeTreeCanvas({
           ctx.drawImage(decoImg, pos.x, pos.y, DECO, DECO);
         } catch {
           // 이미지 로드 실패하면 스킵
-          console.warn(`Decoration ${deco.id} failed to load.`);
         }
       }
       // 최종 png 생성
       try {
         const out = canvas.toDataURL("image/png");
         onRenderedDataUrl?.(out);
-      } catch (err) {
-        console.error("toDataURL failed:", err);
-      }
+      } catch (err) {}
       //setReady(true);
       // 최초 1회만 상태 변경
       if (!hasRenderedOnce) {
@@ -109,9 +105,6 @@ export default function CompositeTreeCanvas({
           aspectRatio: "160 / 192",
         }}
       />
-      {/* <div className="mini" style={{ marginTop: 10 }}>
-        {hasRenderedOnce ? `합성 완료 · ${TREE_W}×${TREE_H}px` : "합성 중..."}
-      </div> */}
     </div>
   );
 }

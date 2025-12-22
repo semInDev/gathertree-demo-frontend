@@ -26,49 +26,19 @@ export default function TreeDrawPage() {
       const newUuid = response.data.data.uuid;
       setUuid(newUuid);
     } catch (err) {
-      console.error(err);
       alert("트리 저장 중 오류 발생");
     }
   };
 
   const treeUrl = uuid ? `${window.location.origin}/tree/${uuid}` : "";
 
-  // 캔버스 비율 조정을 위함
-  const canvasWrapperRef = useRef(null);
-  const [scale, setScale] = useState(3);
-
-  useEffect(() => {
-    const wrapper = canvasWrapperRef.current;
-    if (!wrapper) return;
-
-    const resize = () => {
-      const { width, height } = wrapper.getBoundingClientRect();
-
-      const CANVAS_W = 160;
-      const CANVAS_H = 192;
-
-      const scaleX = width / CANVAS_W;
-      const scaleY = height / CANVAS_H;
-
-      // 너무 작아지거나 커지는 것 방지
-      const nextScale = Math.max(2, Math.floor(Math.min(scaleX, scaleY)));
-
-      setScale(nextScale);
-    };
-
-    resize(); // 최초 1회
-    window.addEventListener("resize", resize);
-
-    return () => window.removeEventListener("resize", resize);
-  }, []);
-
   return (
     <div className="app-shell">
       <section className="nes-container is-rounded panel">
         <h3 style={{ marginTop: 0 }}>트리 그리기</h3>
+        <p>수정도 가능합니다. 단, 아래의 트리 크기를 지켜주세요.</p>
 
         <div
-          ref={canvasWrapperRef}
           style={{
             width: "100%",
             maxWidth: "100%",
@@ -80,7 +50,6 @@ export default function TreeDrawPage() {
           <PixelCanvas
             widthPx={160}
             heightPx={192}
-            scale={scale}
             baseImage={baseTree}
             onChange={setTreeBase64}
           />

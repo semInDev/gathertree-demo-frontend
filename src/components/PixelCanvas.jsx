@@ -9,22 +9,15 @@ export default function PixelCanvas({
   onChange,
 }) {
   const canvasRef = useRef(null);
+  const ctxRef = useRef(null); // getContext 매번 호출 리팩토링
+  const lastPosRef = useRef(null);
 
   const [color, setColor] = useState("#000000");
   const [tool, setTool] = useState("pen"); // pen | eraser
   const [brushSize, setBrushSize] = useState(1); //  펜 굵기
   const [isDown, setIsDown] = useState(false);
-  const [scale, setScale] = useState(10);
 
-  const cssWidth = widthPx * scale;
-  const cssHeight = heightPx * scale;
-
-  // getContext 매번 호출 리팩토링
-  const ctxRef = useRef(null);
-
-  /* -----------------------------
-   * 캔버스 초기화 & 이미지 로드
-   * ----------------------------- */
+  // 캔버스 초기화, 이미지 로드
   useEffect(() => {
     const c = canvasRef.current;
     if (!c) return;
@@ -62,9 +55,7 @@ export default function PixelCanvas({
     drawAll();
   }, [widthPx, heightPx, initialImageDataUrl]);
 
-  /* -----------------------------
-   * PNG 결과 emit
-   * ----------------------------- */
+  // png 결과 emit
   const emit = () => {
     const c = canvasRef.current;
     if (!c) return;
@@ -72,9 +63,7 @@ export default function PixelCanvas({
     onChange?.(dataUrl);
   };
 
-  /* -----------------------------
-   * 마우스 → 픽셀 좌표 변환, 모바일, 태블릿펜 모두 가능하게
-   * ----------------------------- */
+  // 마우스 -> 픽셀 좌표 변환 (태블릿, 모바일 모두 가능하게)
   const getPixelFromEvent = (e) => {
     const rect = canvasRef.current.getBoundingClientRect();
 
@@ -90,9 +79,7 @@ export default function PixelCanvas({
     };
   };
 
-  // 선 안끊겨보이게 하려고
-  const lastPosRef = useRef(null);
-
+  // 선 부드럽게
   const drawLine = (from, to) => {
     const dx = to.x - from.x;
     const dy = to.y - from.y;
@@ -105,9 +92,7 @@ export default function PixelCanvas({
     }
   };
 
-  /* -----------------------------
-   * 브러시 드로잉 (굵기 지원)
-   * ----------------------------- */
+  // 브러쉬 드로잉 (굵기 지원)
   const drawBrush = (x, y) => {
     const ctx = ctxRef.current;
     if (!ctx) return;
@@ -131,9 +116,7 @@ export default function PixelCanvas({
     }
   };
 
-  /* -----------------------------
-   * 마우스 이벤트
-   * ----------------------------- */
+  // 마우스 이벤트
   const handleDown = (e) => {
     setIsDown(true);
     const pos = getPixelFromEvent(e);
@@ -153,22 +136,12 @@ export default function PixelCanvas({
     emit();
   };
 
-  /* -----------------------------
-   * 전체 지우기
-   * ----------------------------- */
-
+  // 전체 지우기
   const clearAll = async () => {
     const ctx = ctxRef.current;
     if (!ctx) return;
 
     ctx.clearRect(0, 0, widthPx, heightPx);
-
-    if (baseImage) {
-      const img = new Image();
-      img.src = baseImage;
-      await img.decode();
-      ctx.drawImage(img, 0, 0, widthPx, heightPx);
-    }
 
     emit();
   };
@@ -245,9 +218,9 @@ export default function PixelCanvas({
           ref={canvasRef}
           className="canvas-transparent"
           style={{
-            width: cssWidth,
-            height: cssHeight,
+            height: heightPx * 5,
             maxWidth: "100%",
+            width: "100%",
             border: "2px solid #111",
             imageRendering: "pixelated",
             cursor: tool === "eraser" ? "not-allowed" : "crosshair",

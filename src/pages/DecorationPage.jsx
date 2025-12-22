@@ -25,7 +25,6 @@ export default function DecorationPage() {
         alert("트리를 불러오는 중 오류 발생: " + response.data.message);
       }
     } catch (err) {
-      console.error(err);
       alert("트리 조회 중 오류 발생");
     } finally {
       setLoading(false);
@@ -60,8 +59,6 @@ export default function DecorationPage() {
         alert("장식 추가 중 오류 발생: " + response.data.message);
       }
     } catch (err) {
-      console.error(err);
-      console.error(err);
       if (err.response && err.response.status === 400) {
         alert(
           "장식 개수가 초과되었습니다! 다른 사용자가 동시에 추가했을 수 있어요."
