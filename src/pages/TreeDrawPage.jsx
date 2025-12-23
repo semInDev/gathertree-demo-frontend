@@ -10,6 +10,7 @@ export default function TreeDrawPage() {
   const navigate = useNavigate();
   const [treeBase64, setTreeBase64] = useState("");
   const [uuid, setUuid] = useState(null);
+  const [canvasKey, setCanvasKey] = useState(0); // 새로고침 위한 키
 
   // 백엔드랑 연동
   const handleSave = async () => {
@@ -27,6 +28,13 @@ export default function TreeDrawPage() {
       setUuid(newUuid);
     } catch (err) {
       alert("트리 저장 중 오류 발생");
+    }
+  };
+
+  // 복구 버튼 눌렀을 때
+  const handleRestoreTree = () => {
+    if (window.confirm("그린 내용을 지우고 처음 상태로 되돌릴까요?")) {
+      setCanvasKey((prev) => prev + 1);
     }
   };
 
@@ -52,10 +60,21 @@ export default function TreeDrawPage() {
           }}
         >
           <PixelCanvas
+            key={canvasKey}
             widthPx={160}
             heightPx={192}
             baseImage={baseTree}
             onChange={setTreeBase64}
+            extraButtons={
+              <button
+                type="button"
+                className="nes-btn is-success"
+                onClick={handleRestoreTree}
+                style={{ fontWeight: 600 }}
+              >
+                트리 복구
+              </button>
+            }
           />
         </div>
 

@@ -7,6 +7,7 @@ export default function PixelCanvas({
   initialImageDataUrl,
   baseImage, // 기본 트리 이미지
   onChange,
+  extraButtons,
 }) {
   const canvasRef = useRef(null);
   const ctxRef = useRef(null); // getContext 매번 호출 리팩토링
@@ -262,6 +263,8 @@ export default function PixelCanvas({
         >
           전체 지우기
         </button>
+
+        {extraButtons}
       </div>
 
       <div
