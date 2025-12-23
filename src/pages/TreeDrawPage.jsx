@@ -35,8 +35,12 @@ export default function TreeDrawPage() {
   return (
     <div className="app-shell">
       <section className="nes-container is-rounded panel">
-        <h3 style={{ marginTop: 0 }}>트리 그리기</h3>
-        <p>수정도 가능합니다. 단, 아래의 트리 크기를 지켜주세요.</p>
+        <h3 style={{ marginTop: 0 }}>나만의 트리 그리기</h3>
+        <div>
+          기본 트리를 그대로 쓰거나 나만의 트리를 그릴 수 있어요.
+          <br />
+          새로 그릴 경우 <b>기존의 트리 크기</b>를 꼭 지켜주세요.
+        </div>
 
         <div
           style={{
@@ -55,6 +59,16 @@ export default function TreeDrawPage() {
           />
         </div>
 
+        <div
+          style={{
+            color: "#d97706",
+            marginTop: 8,
+            display: "flex",
+            justifyContent: "center",
+          }}
+        >
+          저장하면 다시 수정할 수 없어요.
+        </div>
         <div
           className="btn-row"
           style={{ display: "flex", justifyContent: "center" }}
@@ -82,8 +96,7 @@ export default function TreeDrawPage() {
         <Modal title="트리가 저장되었습니다." onClose={() => setUuid(null)}>
           <br />
           <p>
-            아래 링크는 <b>트리를 관리하는 유일한 주소</b>입니다. 절대
-            잃어버리지 마세요!
+            이 링크를 잃어버리면 <b>트리를 다시 열 수 없어요.</b>
           </p>
           <div className="nes-field">
             <input className="nes-input" value={treeUrl} readOnly />

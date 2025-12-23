@@ -96,7 +96,6 @@ export default function CompositeTreeCanvas({
         ref={canvasRef}
         className="canvas-transparent"
         style={{
-          padding: 12,
           marginTop: 12,
           width: "100%",
           border: "2px solid #111",

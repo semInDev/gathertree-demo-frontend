@@ -17,7 +17,6 @@ HTML5 Canvas를 활용해 장식을 그릴 수 있으며 여러 사용자의 장
 ## ✨ 주요 기능
 
 - 캔버스에 주어진 트리 사용하거나 트리 그리기
-- 트리 수정하기
 - 캔버스를 이용한 장식 그리기
 - 장식 위치 계산 및 트리 배치
 - 여러 장식을 합성하여 하나의 트리 이미지로 렌더링
@@ -66,4 +65,4 @@ http://localhost:5173
 
 🌍 배포 주소
 
-[GatherTree (Pixel UI)](https://beour.store)
+[GatherTree](https://beour.store)
