@@ -120,6 +120,19 @@ export default function DecorationPage() {
             장식은 최대 10개까지 가능합니다.
           </div>
         )}
+        {!isMaxDecorations && (
+          <div
+            style={{
+              color: "#d97706",
+              marginTop: 8,
+              display: "flex",
+              justifyContent: "center",
+            }}
+          >
+            제출하면 다시 수정할 수 없어요.
+          </div>
+        )}
+
         <div
           className="btn-row"
           style={{ display: "flex", justifyContent: "center" }}

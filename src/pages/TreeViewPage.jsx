@@ -106,6 +106,53 @@ export default function TreeViewPage() {
     a.click();
   };
 
+  // Data URL을 Blob으로 변환
+  const dataURLtoBlob = (dataurl) => {
+    const arr = dataurl.split(",");
+    const mime = arr[0].match(/:(.*?);/)[1];
+    const bstr = atob(arr[1]);
+
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new Blob([u8arr], { type: mime });
+  };
+
+  const handleEvaluate = async (mode) => {
+    if (!finalPng) return alert("이미지가 아직 준비되지 않았습니다.");
+
+    try {
+      const key = `eval/tmp/${uuid}-${Date.now()}.png`; // 같은 트리 여러 번 평가 시 덮어쓰기 방지
+      const response = await axios.post(
+        "https://api.beour.store/s3/presigned-url",
+        { key: key }
+      );
+
+      const { uploadUrl, publicUrl } = response.data.data;
+
+      if (!uploadUrl) {
+        throw new Error("업로드 URL을 받아오지 못했습니다.");
+      }
+
+      const imageBlob = dataURLtoBlob(finalPng);
+      await axios.put(uploadUrl, imageBlob, {
+        headers: { "Content-Type": "image/png" },
+      });
+      console.log(publicUrl);
+
+      navigate(`/tree/${uuid}/evaluate?mode=${mode}`, {
+        state: { finalImageUrl: publicUrl },
+      });
+      console.log(publicUrl);
+    } catch (err) {
+      console.error("에러 발생 상세:", err);
+      alert("이미지 처리 중 오류가 발생했습니다.");
+    }
+  };
+
   if (!tree) {
     return (
       <div className="app-shell">
@@ -125,7 +172,7 @@ export default function TreeViewPage() {
   return (
     <div className="app-shell">
       <section className="nes-container is-rounded panel">
-        <h2 style={{ marginTop: 0 }}>내 트리 확인하기</h2>
+        <h2 style={{ marginTop: 0 }}>나만의 크리스마스 트리</h2>
         <br />
         <p>
           <b>현재 장식 수 : {count} / 10</b>
@@ -150,7 +197,7 @@ export default function TreeViewPage() {
             onClick={() => setShowInvite(true)}
             style={{ fontWeight: 600 }}
           >
-            장식 요청 링크
+            장식 참여 링크
           </button>
 
           {/* 버그로 잠시 주석처리할게요.. */}
@@ -169,7 +216,7 @@ export default function TreeViewPage() {
             }}
             style={{ fontWeight: 600 }}
           >
-            내 트리 링크 저장
+            나만의 트리 링크 저장
           </button>
 
           <button
@@ -184,9 +231,7 @@ export default function TreeViewPage() {
         <hr />
 
         <p style={{ fontSize: "1rem", paddingTop: "3px" }}>
-          {canEvaluate
-            ? "AI 평가 받기"
-            : "트리를 완성하면 AI에게 평가받을 수 있어요."}
+          {canEvaluate ? "AI 평가 받기" : "트리를 완성하면 AI가 평가해줘요."}
         </p>
 
         <div className="btn-row">
@@ -196,19 +241,18 @@ export default function TreeViewPage() {
             }`}
             disabled={!canEvaluate}
             onClick={() => {
-              if (!canEvaluate) return;
-              navigate(`/tree/${uuid}/evaluate?mode=mild`);
+              handleEvaluate("mild");
             }}
             style={{ fontWeight: 600 }}
           >
             GPF 순한맛 평가
           </button>
+
           <button
             className={`nes-btn is-error ${!canEvaluate ? "is-disabled" : ""}`}
             disabled={!canEvaluate}
             onClick={() => {
-              if (!canEvaluate) return;
-              navigate(`/tree/${uuid}/evaluate?mode=spicy`);
+              handleEvaluate("spicy");
             }}
             style={{ fontWeight: 600 }}
           >
@@ -226,7 +270,7 @@ export default function TreeViewPage() {
 
         {decorations.length === 0 ? (
           <p style={{ fontSize: "1rem" }}>
-            아직 장식이 없어요. 친구에게 장식을 그려달라고 요청하세요!
+            아직 장식이 없어요. 친구에게 장식을 그려달라고 해보세요!
           </p>
         ) : (
           <div style={{ display: "grid", gap: 10 }}>
@@ -304,13 +348,13 @@ export default function TreeViewPage() {
       {/* 장식 요청 팝업 */}
       {showInvite && (
         <Modal
-          title={inviteType === "decorate" ? "장식 요청 링크" : "내 트리 링크"}
+          title={inviteType === "decorate" ? "장식 참여 링크" : "내 트리 링크"}
           onClose={() => setShowInvite(false)}
         >
           <p>
             {inviteType === "decorate"
               ? "이 링크를 친구에게 보내면 트리를 꾸밀 수 있어요"
-              : "이 링크는 내 트리를 관리하는 유일한 주소입니다."}
+              : "이 링크로만 내 트리를 다시 열 수 있어요. 꼭 저장해 주세요."}
           </p>
           <input className="nes-input" value={decorateUrl} readOnly />
           <div className="btn-row">

@@ -1,17 +1,25 @@
-import { useParams, useSearchParams, useNavigate } from "react-router-dom";
-import { useEffect, useState, useRef } from "react";
+import {
+  useParams,
+  useSearchParams,
+  useNavigate,
+  useLocation,
+} from "react-router-dom";
+import { useEffect, useState } from "react";
 import axios from "axios";
 
 export default function EvaluationPage() {
   const { uuid } = useParams();
   const [params] = useSearchParams();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const mode = params.get("mode") ?? "mild"; // mild | spicy
 
+  // 이전 페이지에서 보낸 최종 트리
+  const finalImageUrl = location.state?.finalImageUrl;
   const [treeData, setTreeData] = useState(null);
 
-  // 최종 트리 불러오는게 없네..
+  //트리 정보 필요한 경우에만 호출 (필요할까??)
   useEffect(() => {
     axios.get(`https://api.beour.store/tree/${uuid}`).then((res) => {
       if (res.data.isSuccess) {
@@ -20,7 +28,7 @@ export default function EvaluationPage() {
     });
   }, [uuid]);
 
-  // TODO: 실제 AI 응답으로 교체
+  // TODO: 실제 AI 응답으로 교체 (백엔드 연동 시 삭제)
   const mockResult = {
     score: 83,
     title: "정성 가득한 크리스마스 트리",
@@ -43,11 +51,17 @@ export default function EvaluationPage() {
             className="nes-container is-rounded"
             style={{ background: "#fff", marginBottom: 16 }}
           >
-            <img
-              src={treeData.baseImageUrl}
-              alt="완성된 트리"
-              style={{ width: "100%" }}
-            />
+            {finalImageUrl ? (
+              <img
+                src={finalImageUrl}
+                alt="완성된 최종 트리"
+                style={{ width: "100%", imageRendering: "pixelated" }}
+              />
+            ) : (
+              <div style={{ padding: 20 }}>
+                최종 이미지를 생성 중이거나 찾을 수 없습니다.
+              </div>
+            )}
           </div>
         ) : (
           <div
